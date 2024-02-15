@@ -14,7 +14,9 @@ import (
 	"github.com/IsmaelAvotra/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,6 +24,7 @@ const (
 	statusBadRequest          = http.StatusBadRequest
 	statusInternalServerError = http.StatusInternalServerError
 	statusOK                  = http.StatusOK
+	statusUnauthorized        = http.StatusUnauthorized
 )
 
 type Claims struct {
@@ -32,6 +35,38 @@ type Claims struct {
 var JwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 func LoginHandler(c *gin.Context) {
+	incomingUser := models.LoginUser{}
+	dbUser := models.User{}
+
+	if err := c.ShouldBindJSON(&incomingUser); err != nil {
+		utils.ErrorResponse(c, statusBadRequest, err.Error())
+		return
+	}
+	filter := bson.M{"email": incomingUser.Email}
+	err := database.DB.Collection("users").FindOne(context.Background(), filter).Decode(&dbUser)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			utils.ErrorResponse(c, statusUnauthorized, err.Error())
+			return
+		}
+		utils.ErrorResponse(c, statusInternalServerError, err.Error())
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(incomingUser.Password)); err != nil {
+		utils.ErrorResponse(c, statusUnauthorized, err.Error())
+		return
+	}
+
+	token, err := GenerateToken(dbUser.Email)
+
+	if err != nil {
+		utils.ErrorResponse(c, statusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(statusOK, gin.H{"token": token})
+
 }
 
 func RegisterHandler(c *gin.Context) {
@@ -63,9 +98,9 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := HashPassword(userToCreate.Password)
+	hashedPassword, err := utils.HashPassword(userToCreate.Password)
 	if err != nil {
-		utils.ErrorResponse(c, statusInternalServerError, "Could not hash password")
+		utils.ErrorResponse(c, statusInternalServerError, err.Error())
 		return
 	}
 
@@ -90,11 +125,6 @@ func RegisterHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Registration successful", "id": insertedID.Hex()})
-}
-
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
 }
 
 func GenerateToken(email string) (string, error) {

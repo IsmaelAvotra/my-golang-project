@@ -13,9 +13,9 @@ type LoginUser struct {
 
 type User struct {
 	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Username  string             `json:"username" binding:"required" unique:"true"`
+	Username  string             `json:"username" binding:"required" unique:"true" validate:"required,minSize=3"`
 	Email     string             `json:"email" binding:"required,email" unique:"true"`
-	Password  string             `json:"password,omitempty" binding:"required"`
+	Password  string             `json:"password,omitempty" binding:"required" validate:"required,minSize=8"`
 	CreatedAt time.Time          `json:"created_at,omitempty" bson:"created_at,omitempty"`
 	UpdatedAt time.Time          `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
 }
