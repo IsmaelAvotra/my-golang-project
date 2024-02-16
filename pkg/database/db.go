@@ -88,3 +88,29 @@ func GetUserByID(id string) (*models.User, error) {
 	}
 	return &user, nil
 }
+
+func DeleteUser(id string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return err
+	}
+	_, err = DB.Collection("users").DeleteOne(context.TODO(), bson.M{"_id": objID})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateUser(id string, update bson.M) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return err
+	}
+	_, err = DB.Collection("users").UpdateOne(context.TODO(), bson.M{"_id": objID}, bson.M{"$set": update})
+	if err != nil {
+		return err
+	}
+	return nil
+}

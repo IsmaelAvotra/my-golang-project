@@ -20,7 +20,7 @@ func main() {
 	}
 
 	if err != nil {
-		log.Fatal("Erreur lors du chargement du fichier .env")
+		log.Fatal("Error loading .env file")
 	}
 	database.ConnectDatabase()
 

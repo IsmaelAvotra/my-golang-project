@@ -6,6 +6,7 @@ import (
 	"github.com/IsmaelAvotra/pkg/database"
 	"github.com/IsmaelAvotra/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -44,9 +45,33 @@ func GetUserHandler(c *gin.Context) {
 }
 
 func DeleteUserHandler(c *gin.Context) {
+	userId := c.Param("id")
 
+	err := database.DeleteUser(userId)
+
+	if err != nil {
+		utils.ErrorResponse(c, statusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(statusOK, gin.H{"message": "user deleted with success"})
 }
 
 func UpdateUserHandler(c *gin.Context) {
+	userId := c.Param("id")
+
+	var update bson.M
+
+	if err := c.BindJSON(&update); err != nil {
+		utils.ErrorResponse(c, statusBadRequest, err.Error())
+		return
+	}
+
+	err := database.UpdateUser(userId, update)
+	if err != nil {
+		utils.ErrorResponse(c, statusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(statusOK, gin.H{"message": "User updated successfully"})
 
 }
