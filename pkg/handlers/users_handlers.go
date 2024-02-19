@@ -10,20 +10,20 @@ import (
 )
 
 const (
-	statusNotFound            = http.StatusNotFound
-	statusInternalServerError = http.StatusInternalServerError
-	statusOK                  = http.StatusOK
-	statusBadRequest          = http.StatusBadRequest
+	StatusNotFound            = http.StatusNotFound
+	StatusInternalServerError = http.StatusInternalServerError
+	StatusOK                  = http.StatusOK
+	StatusBadRequest          = http.StatusBadRequest
 )
 
 func GetUsersHandler(c *gin.Context) {
 	users, err := database.GetAllUsers()
 	if err != nil {
-		utils.ErrorResponse(c, statusInternalServerError, err.Error())
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(statusOK, users)
+	c.JSON(StatusOK, users)
 }
 
 func GetUserHandler(c *gin.Context) {
@@ -32,16 +32,16 @@ func GetUserHandler(c *gin.Context) {
 	user, err := database.GetUserByID(userId)
 
 	if err != nil {
-		utils.ErrorResponse(c, statusBadRequest, err.Error())
+		utils.ErrorResponse(c, StatusBadRequest, err.Error())
 		return
 	}
 
 	if user == nil {
-		utils.ErrorResponse(c, statusNotFound, "User not found")
+		utils.ErrorResponse(c, StatusNotFound, "User not found")
 		return
 	}
 
-	c.JSON(statusOK, user)
+	c.JSON(StatusOK, user)
 }
 
 func DeleteUserHandler(c *gin.Context) {
@@ -50,10 +50,10 @@ func DeleteUserHandler(c *gin.Context) {
 	err := database.DeleteUser(userId)
 
 	if err != nil {
-		utils.ErrorResponse(c, statusInternalServerError, err.Error())
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(statusOK, gin.H{"message": "user deleted with success"})
+	c.JSON(StatusOK, gin.H{"message": "user deleted with success"})
 }
 
 func UpdateUserHandler(c *gin.Context) {
@@ -62,16 +62,16 @@ func UpdateUserHandler(c *gin.Context) {
 	var update bson.M
 
 	if err := c.BindJSON(&update); err != nil {
-		utils.ErrorResponse(c, statusBadRequest, err.Error())
+		utils.ErrorResponse(c, StatusBadRequest, err.Error())
 		return
 	}
 
 	err := database.UpdateUser(userId, update)
 	if err != nil {
-		utils.ErrorResponse(c, statusInternalServerError, err.Error())
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(statusOK, gin.H{"message": "User updated successfully"})
+	c.JSON(StatusOK, gin.H{"message": "User updated successfully"})
 
 }

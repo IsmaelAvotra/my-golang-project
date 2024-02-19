@@ -13,6 +13,7 @@ import (
 
 var DB *mongo.Database
 
+// Connect database
 func ConnectDatabase() {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
@@ -26,6 +27,7 @@ func ConnectDatabase() {
 	DB = client.Database("my-project")
 }
 
+// For users
 func GetUserByEmail(email string) (*models.User, error) {
 	user := models.User{}
 	err := DB.Collection("users").FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
@@ -113,4 +115,17 @@ func UpdateUser(id string, update bson.M) error {
 		return err
 	}
 	return nil
+}
+
+// for university
+func GetUnivByName(univName string) (*models.University, error) {
+	university := models.University{}
+	err := DB.Collection("universities").FindOne(context.TODO(), bson.M{"univName": univName}).Decode(&university)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &university, nil
 }
