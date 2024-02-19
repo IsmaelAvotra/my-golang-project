@@ -62,8 +62,13 @@ func CreateUniverity(c *gin.Context) {
 	c.JSON(StatusOK, gin.H{"message": "University added successful", "univId": insertedID.Hex()})
 }
 
-func GetAllEvents(c *gin.Context) {
-
+func GetUniversitiesHandler(c *gin.Context) {
+	universities, err := database.GetAllUniversities()
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(StatusOK, universities)
 }
 
 func GetEventById(c *gin.Context) {

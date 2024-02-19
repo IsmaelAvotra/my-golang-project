@@ -7,38 +7,38 @@ import (
 )
 
 type Location struct {
-	Adress        string
-	CoordinateGPS string
-	Province      string
-	Region        string
-	City          string
+	Adress        string `json:"adress"`
+	CoordinateGPS string `json:"coordinateGPS"`
+	Province      string `json:"province"`
+	Region        string `json:"region"`
+	City          string `json:"city"`
 }
 
 type Program struct {
-	Name            string
-	Level           string
-	Duration        int
-	Requirements    []string
-	CareerProspects []string
+	Name            string   `json:"programName"`
+	Level           string   `json:"level"`
+	Duration        int      `json:"duration"`
+	Requirements    []string `json:"requirements"`
+	CareerProspects []string `json:"careerProspects"`
 }
 
 type Event struct {
-	Title          string
-	Descrioption   string
-	Date           time.Time
-	Location       string
-	IsFree         bool
-	AdmissionPrice float64
+	Title          string    `json:"eventTitle"`
+	Descrioption   string    `json:"description"`
+	Date           time.Time `json:"eventDate"`
+	Location       string    `json:"eventLocation"`
+	IsFree         bool      `json:"isFree"`
+	AdmissionPrice float64   `json:"admissionPrice"`
 }
 
 type Contact struct {
-	PhoneNumber string
-	Email       string
-	Website     string
+	PhoneNumber string `json:"phoneNumber"`
+	Email       string `json:"email"`
+	Website     string `json:"website"`
 }
 
 type University struct {
-	ID              primitive.ObjectID `json:"univID,omitempty" bson:"univID,omitempty"`
+	ID              primitive.ObjectID `json:"univID,omitempty" bson:"_id,omitempty"`
 	Name            string             `json:"univName" binding:"required" unique:"true" validate:"required"`
 	Location        Location           `json:"univLocation" binding:"required" validate:"required"`
 	Presentation    string             `json:"presentation"`

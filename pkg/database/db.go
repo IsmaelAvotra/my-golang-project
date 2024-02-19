@@ -120,7 +120,7 @@ func UpdateUser(id string, update bson.M) error {
 // for university
 func GetUnivByName(univName string) (*models.University, error) {
 	university := models.University{}
-	err := DB.Collection("universities").FindOne(context.TODO(), bson.M{"univName": univName}).Decode(&university)
+	err := DB.Collection("universities").FindOne(context.TODO(), bson.M{"name": univName}).Decode(&university)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -128,4 +128,27 @@ func GetUnivByName(univName string) (*models.University, error) {
 		return nil, err
 	}
 	return &university, nil
+}
+
+func GetAllUniversities() ([]models.University, error) {
+	universities := []models.University{}
+	cursor, err := DB.Collection("universities").Find(context.TODO(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		university := models.University{}
+		err := cursor.Decode(&university)
+
+		if err != nil {
+			return nil, err
+		}
+		universities = append(universities, university)
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	return universities, nil
 }
