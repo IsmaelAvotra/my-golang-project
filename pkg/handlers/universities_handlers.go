@@ -7,6 +7,8 @@ import (
 	"github.com/IsmaelAvotra/pkg/models"
 	"github.com/IsmaelAvotra/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -20,11 +22,11 @@ func CreateUniverity(c *gin.Context) {
 	existingUniverity, err := database.GetUnivByName(univToCreate.Name)
 
 	if err != nil {
-		utils.ErrorResponse(c, StatusInternalServerError, "Error checking univeristy name uniqueness")
+		utils.ErrorResponse(c, StatusInternalServerError, "error checking univeristy name uniqueness")
 	}
 
 	if existingUniverity != nil {
-		utils.ErrorResponse(c, StatusBadRequest, "Univeristy with this name already exists")
+		utils.ErrorResponse(c, StatusBadRequest, "univeristy with this name already exists")
 		return
 	}
 
@@ -48,18 +50,18 @@ func CreateUniverity(c *gin.Context) {
 
 	insertResult, err := database.DB.Collection("universities").InsertOne(context.Background(), newUniversity)
 	if err != nil {
-		utils.ErrorResponse(c, StatusInternalServerError, "Could not save the university")
+		utils.ErrorResponse(c, StatusInternalServerError, "could not save the university")
 		return
 	}
 
 	insertedID, ok := insertResult.InsertedID.(primitive.ObjectID)
 
 	if !ok {
-		utils.ErrorResponse(c, StatusInternalServerError, "Invalid inserted ID")
+		utils.ErrorResponse(c, StatusInternalServerError, "invalid inserted ID")
 		return
 	}
 
-	c.JSON(StatusOK, gin.H{"message": "University added successful", "univId": insertedID.Hex()})
+	c.JSON(StatusOK, gin.H{"message": "university added successful", "univId": insertedID.Hex()})
 }
 
 func GetUniversitiesHandler(c *gin.Context) {
@@ -71,14 +73,44 @@ func GetUniversitiesHandler(c *gin.Context) {
 	c.JSON(StatusOK, universities)
 }
 
-func GetEventById(c *gin.Context) {
+func GetUniversityHandler(c *gin.Context) {
+	univId := c.Param("univId")
 
+	university, err := database.GetUnivById(univId)
+	if err != nil {
+		utils.ErrorResponse(c, StatusNotFound, "university not found.")
+		return
+	}
+	c.JSON(StatusOK, university)
 }
 
-func DeleteEvent(c *gin.Context) {
+func DeleteUniversityHandler(c *gin.Context) {
+	univID := c.Param("univId")
 
+	err := database.DeleteUniversity(univID)
+
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(StatusOK, gin.H{"message": "university deleted with success"})
 }
 
-func UpdateEvent(c *gin.Context) {
+func UpdateUniversityHandler(c *gin.Context) {
+	univID := c.Param("univId")
+	var update bson.M
 
+	err := c.ShouldBindBodyWith(&update, binding.JSON)
+	if err != nil {
+		utils.ErrorResponse(c, StatusBadRequest, err.Error())
+		return
+	}
+
+	err = database.UpdateUniversity(univID, update)
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(StatusOK, gin.H{"message": "university updated successfully"})
 }

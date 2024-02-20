@@ -104,10 +104,13 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
+	userToCreate.Role = "normal"
+
 	newUser := models.User{
 		Username:  userToCreate.Username,
 		Email:     userToCreate.Email,
 		Password:  hashedPassword,
+		Role:      userToCreate.Role,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

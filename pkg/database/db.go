@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 
 	"github.com/IsmaelAvotra/pkg/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -130,6 +131,23 @@ func GetUnivByName(univName string) (*models.University, error) {
 	return &university, nil
 }
 
+func GetUnivById(id string) (*models.University, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	university := models.University{}
+
+	err = DB.Collection("universities").FindOne(context.TODO(), bson.M{"_id": objID}).Decode(&university)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("university not found")
+		}
+		return nil, err
+	}
+	return &university, nil
+}
+
 func GetAllUniversities() ([]models.University, error) {
 	universities := []models.University{}
 	cursor, err := DB.Collection("universities").Find(context.TODO(), bson.M{})
@@ -151,4 +169,36 @@ func GetAllUniversities() ([]models.University, error) {
 		return nil, err
 	}
 	return universities, nil
+}
+
+func DeleteUniversity(id string) error {
+	objId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := DB.Collection("universities").DeleteOne(context.TODO(), bson.M{"_id": objId})
+	if err != nil {
+		return err
+	}
+	if result.DeletedCount == 0 {
+		return errors.New("university not found")
+	}
+	return nil
+}
+
+func UpdateUniversity(id string, update bson.M) error {
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	result, err := DB.Collection("universities").UpdateOne(context.TODO(), bson.M{"_id": objId}, bson.M{"$set": update})
+	if err != nil {
+		return err
+	}
+	if result.ModifiedCount == 0 {
+		return errors.New("no changes made")
+	}
+	return nil
 }

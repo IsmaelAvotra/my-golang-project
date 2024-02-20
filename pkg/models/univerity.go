@@ -39,7 +39,7 @@ type Contact struct {
 
 type University struct {
 	ID              primitive.ObjectID `json:"univID,omitempty" bson:"_id,omitempty"`
-	Name            string             `json:"univName" binding:"required" unique:"true" validate:"required"`
+	Name            string             `json:"univName" bson:"univName,omitempty" binding:"required" unique:"true" validate:"required"`
 	Location        Location           `json:"univLocation" binding:"required" validate:"required"`
 	Presentation    string             `json:"presentation"`
 	IsPrivate       bool               `json:"isPrivate" validate:"required"`

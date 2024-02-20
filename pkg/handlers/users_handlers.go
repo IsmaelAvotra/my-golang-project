@@ -37,7 +37,7 @@ func GetUserHandler(c *gin.Context) {
 	}
 
 	if user == nil {
-		utils.ErrorResponse(c, StatusNotFound, "User not found")
+		utils.ErrorResponse(c, StatusNotFound, "user not found")
 		return
 	}
 
@@ -72,6 +72,6 @@ func UpdateUserHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(StatusOK, gin.H{"message": "User updated successfully"})
+	c.JSON(StatusOK, gin.H{"message": "user updated successfully"})
 
 }
