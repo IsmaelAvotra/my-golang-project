@@ -7,7 +7,6 @@ import (
 	"github.com/IsmaelAvotra/pkg/models"
 	"github.com/IsmaelAvotra/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -98,13 +97,33 @@ func DeleteUniversityHandler(c *gin.Context) {
 }
 
 func UpdateUniversityHandler(c *gin.Context) {
+	university := models.University{}
 	univID := c.Param("univId")
-	var update bson.M
 
-	err := c.ShouldBindBodyWith(&update, binding.JSON)
+	err := c.BindJSON(&university)
 	if err != nil {
 		utils.ErrorResponse(c, StatusBadRequest, err.Error())
 		return
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"univName":        university.Name,
+			"univLocation":    university.Location,
+			"presentation":    university.Presentation,
+			"isPrivate":       university.IsPrivate,
+			"tuition":         university.Tuition,
+			"contact":         university.Contact,
+			"imageUrl":        university.ImageURL,
+			"documentUrl":     university.DocumentURL,
+			"programs":        university.Programs,
+			"infrastructure":  university.Infrastructure,
+			"partnerships":    university.Partnerships,
+			"successDiplomas": university.SuccessDiplomas,
+			"events":          university.Events,
+			"news":            university.News,
+			"photos":          university.Photos,
+		},
 	}
 
 	err = database.UpdateUniversity(univID, update)

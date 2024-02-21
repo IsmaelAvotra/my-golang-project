@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/IsmaelAvotra/pkg/models"
+	"github.com/IsmaelAvotra/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -111,9 +112,30 @@ func UpdateUser(id string, update bson.M) error {
 	if err != nil {
 		return err
 	}
-	_, err = DB.Collection("users").UpdateOne(context.TODO(), bson.M{"_id": objID}, bson.M{"$set": update})
+	if username, ok := update["username"]; ok {
+		count, err := DB.Collection("users").CountDocuments(context.TODO(), bson.M{"username": username})
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			return errors.New("username already exists")
+		}
+	}
+
+	if password, ok := update["password"]; ok {
+		hashedPassword, err := utils.HashPassword(password.(string))
+		if err != nil {
+			return err
+		}
+		update["password"] = hashedPassword
+	}
+
+	result, err := DB.Collection("users").UpdateOne(context.TODO(), bson.M{"_id": objID}, bson.M{"$set": update})
 	if err != nil {
 		return err
+	}
+	if result.ModifiedCount == 0 {
+		return errors.New("no changes made")
 	}
 	return nil
 }
@@ -193,7 +215,7 @@ func UpdateUniversity(id string, update bson.M) error {
 	if err != nil {
 		return err
 	}
-	result, err := DB.Collection("universities").UpdateOne(context.TODO(), bson.M{"_id": objId}, bson.M{"$set": update})
+	result, err := DB.Collection("universities").UpdateOne(context.TODO(), bson.M{"_id": objId}, update)
 	if err != nil {
 		return err
 	}
