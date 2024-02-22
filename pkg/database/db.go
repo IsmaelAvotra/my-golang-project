@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/IsmaelAvotra/pkg/models"
 	"github.com/IsmaelAvotra/pkg/utils"
@@ -142,8 +143,9 @@ func UpdateUser(id string, update bson.M) error {
 
 // for university
 func GetUnivByName(univName string) (*models.University, error) {
+	normalizedUnivName := strings.ToLower(strings.TrimSpace(univName))
 	university := models.University{}
-	err := DB.Collection("universities").FindOne(context.TODO(), bson.M{"name": univName}).Decode(&university)
+	err := DB.Collection("universities").FindOne(context.TODO(), bson.M{"name": normalizedUnivName}).Decode(&university)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -216,6 +218,92 @@ func UpdateUniversity(id string, update bson.M) error {
 		return err
 	}
 	result, err := DB.Collection("universities").UpdateOne(context.TODO(), bson.M{"_id": objId}, update)
+	if err != nil {
+		return err
+	}
+	if result.ModifiedCount == 0 {
+		return errors.New("no changes made")
+	}
+	return nil
+}
+
+// for Program's university
+func GetProgramByName(programName string) (*models.Program, error) {
+	normalizedProgramName := strings.ToLower(strings.TrimSpace(programName))
+	program := models.Program{}
+	err := DB.Collection("programs").FindOne(context.TODO(), bson.M{"name": normalizedProgramName}).Decode(&program)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &program, nil
+}
+
+func GetProgramById(id string) (*models.Program, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	program := models.Program{}
+
+	err = DB.Collection("programs").FindOne(context.TODO(), bson.M{"_id": objID}).Decode(&program)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("program not found")
+		}
+		return nil, err
+	}
+	return &program, nil
+}
+
+func GetAllPrograms() ([]models.Program, error) {
+	programs := []models.Program{}
+	cursor, err := DB.Collection("programs").Find(context.TODO(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		program := models.Program{}
+		err := cursor.Decode(&program)
+
+		if err != nil {
+			return nil, err
+		}
+		programs = append(programs, program)
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	return programs, nil
+}
+
+func DeleteProgram(id string) error {
+	objId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := DB.Collection("programs").DeleteOne(context.TODO(), bson.M{"_id": objId})
+	if err != nil {
+		return err
+	}
+	if result.DeletedCount == 0 {
+		return errors.New("program not found")
+	}
+	return nil
+}
+
+func UpdateProgram(id string, update bson.M) error {
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	result, err := DB.Collection("programs").UpdateOne(context.TODO(), bson.M{"_id": objId}, update)
 	if err != nil {
 		return err
 	}
