@@ -21,7 +21,7 @@ func InitRouter() *gin.Engine {
 		v1.DELETE("/users/:id", handlers.DeleteUserHandler)
 		v1.PATCH("/users/:id", handlers.UpdateUserHandler)
 
-		v1.GET("/universities", handlers.GetUniversitiesHandler)
+		v1.GET("/universities", handlers.GetFilteredUniversitiesHandler)
 		v1.GET("/universities/:univId", handlers.GetUniversityHandler)
 		v1.DELETE("/universities/:univId", handlers.DeleteUniversityHandler)
 		v1.PATCH("/universities/:univId", handlers.UpdateUniversityHandler)

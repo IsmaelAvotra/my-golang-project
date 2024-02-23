@@ -72,6 +72,27 @@ func GetUniversitiesHandler(c *gin.Context) {
 	c.JSON(StatusOK, universities)
 }
 
+func GetFilteredUniversitiesHandler(c *gin.Context) {
+	programName := c.Query("programName")
+	careerProspect := c.Query("careerProspect")
+
+	filter := bson.M{}
+	if programName != "" {
+		filter["programs.programName"] = programName
+	}
+	if careerProspect != "" {
+		filter["careerProspects"] = careerProspect
+	}
+
+	universities, err := database.GetFilteredUniversities(filter)
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(StatusOK, universities)
+}
+
 func GetUniversityHandler(c *gin.Context) {
 	univId := c.Param("univId")
 

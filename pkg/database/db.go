@@ -195,6 +195,31 @@ func GetAllUniversities() ([]models.University, error) {
 	return universities, nil
 }
 
+func GetFilteredUniversities(filter bson.M) ([]models.University, error) {
+	universities := []models.University{}
+
+	cursor, err := DB.Collection("universities").Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		university := models.University{}
+		err := cursor.Decode(&university)
+		if err != nil {
+			return nil, err
+		}
+		universities = append(universities, university)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return universities, nil
+}
+
 func DeleteUniversity(id string) error {
 	objId, err := primitive.ObjectIDFromHex(id)
 
