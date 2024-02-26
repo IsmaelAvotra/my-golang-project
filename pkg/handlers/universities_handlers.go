@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 
 	"github.com/IsmaelAvotra/pkg/database"
 	"github.com/IsmaelAvotra/pkg/models"
@@ -73,12 +75,31 @@ func GetUniversitiesHandler(c *gin.Context) {
 }
 
 func GetFilteredUniversitiesHandler(c *gin.Context) {
-	programName := c.Query("programName")
+	encodedProgramName := c.Query("programName")
+
+	programName, err := url.QueryUnescape(encodedProgramName)
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
 	careerProspect := c.Query("careerProspect")
+
+	fmt.Println(programName)
 
 	filter := bson.M{}
 	if programName != "" {
-		filter["programs.programName"] = programName
+		program, err := database.GetProgramByName(programName)
+		fmt.Println(program)
+		if err != nil {
+			utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+			return
+		}
+		if program != nil {
+			filter["programIDs"] = program.ID
+		} else {
+			utils.ErrorResponse(c, StatusNotFound, "Program not found")
+			return
+		}
 	}
 	if careerProspect != "" {
 		filter["careerProspects"] = careerProspect

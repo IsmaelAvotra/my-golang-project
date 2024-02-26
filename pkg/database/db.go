@@ -256,7 +256,7 @@ func UpdateUniversity(id string, update bson.M) error {
 func GetProgramByName(programName string) (*models.Program, error) {
 	normalizedProgramName := strings.ToLower(strings.TrimSpace(programName))
 	program := models.Program{}
-	err := DB.Collection("programs").FindOne(context.TODO(), bson.M{"name": normalizedProgramName}).Decode(&program)
+	err := DB.Collection("programs").FindOne(context.TODO(), bson.M{"programname": normalizedProgramName}).Decode(&program)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
