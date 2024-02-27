@@ -28,7 +28,7 @@ func InitRouter() *gin.Engine {
 		v1.POST("/create-university", handlers.CreateUniverity)
 
 		v1.POST("/universities/create-program", handlers.CreateProgramHandler)
-		v1.GET("/universities/programs", handlers.GetProgramsHandler)
+		v1.GET("/universities/programs", handlers.GetProgramsFilteredHandler)
 		v1.GET("/universities/programs/:programId", handlers.GetProgramHandler)
 		v1.PATCH("/universities/programs/:programId", handlers.UpdateProgramHandler)
 		v1.DELETE("/universities/programs/:programId", handlers.DeleteProgramHandler)

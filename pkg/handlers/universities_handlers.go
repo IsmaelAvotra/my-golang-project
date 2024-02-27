@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/IsmaelAvotra/pkg/database"
 	"github.com/IsmaelAvotra/pkg/models"
@@ -82,14 +83,10 @@ func GetFilteredUniversitiesHandler(c *gin.Context) {
 		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
 		return
 	}
-	careerProspect := c.Query("careerProspect")
-
-	fmt.Println(programName)
 
 	filter := bson.M{}
 	if programName != "" {
 		program, err := database.GetProgramByName(programName)
-		fmt.Println(program)
 		if err != nil {
 			utils.ErrorResponse(c, StatusInternalServerError, err.Error())
 			return
@@ -100,9 +97,6 @@ func GetFilteredUniversitiesHandler(c *gin.Context) {
 			utils.ErrorResponse(c, StatusNotFound, "Program not found")
 			return
 		}
-	}
-	if careerProspect != "" {
-		filter["careerProspects"] = careerProspect
 	}
 
 	universities, err := database.GetFilteredUniversities(filter)
@@ -210,8 +204,23 @@ func CreateProgramHandler(c *gin.Context) {
 	c.JSON(StatusOK, gin.H{"message": "program added successfully", "programId": insertedID.Hex()})
 }
 
-func GetProgramsHandler(c *gin.Context) {
-	programs, err := database.GetAllPrograms()
+func GetProgramsFilteredHandler(c *gin.Context) {
+	careerProspect, err := url.QueryUnescape(c.Query("careerProspect"))
+
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+
+	filter := bson.M{}
+	if careerProspect != "" {
+		regexPattern := primitive.Regex{Pattern: strings.ToLower(careerProspect), Options: "i"}
+		filter["careerprospects"] = regexPattern
+	}
+
+	fmt.Println(filter)
+
+	programs, err := database.GetAllPrograms(filter)
 	if err != nil {
 		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
 		return

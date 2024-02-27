@@ -283,9 +283,9 @@ func GetProgramById(id string) (*models.Program, error) {
 	return &program, nil
 }
 
-func GetAllPrograms() ([]models.Program, error) {
+func GetAllPrograms(filter bson.M) ([]models.Program, error) {
 	programs := []models.Program{}
-	cursor, err := DB.Collection("programs").Find(context.TODO(), bson.M{})
+	cursor, err := DB.Collection("programs").Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err
 	}
