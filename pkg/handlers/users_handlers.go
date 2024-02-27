@@ -27,7 +27,7 @@ func GetUsersHandler(c *gin.Context) {
 }
 
 func GetUserHandler(c *gin.Context) {
-	userId := c.Param("id")
+	userId := c.Param("userId")
 
 	user, err := database.GetUserByID(userId)
 
@@ -45,7 +45,7 @@ func GetUserHandler(c *gin.Context) {
 }
 
 func DeleteUserHandler(c *gin.Context) {
-	userId := c.Param("id")
+	userId := c.Param("userId")
 
 	err := database.DeleteUser(userId)
 
@@ -57,7 +57,7 @@ func DeleteUserHandler(c *gin.Context) {
 }
 
 func UpdateUserHandler(c *gin.Context) {
-	userId := c.Param("id")
+	userId := c.Param("userId")
 
 	var update bson.M
 

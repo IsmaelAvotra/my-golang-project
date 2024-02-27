@@ -54,7 +54,7 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(incomingUser.Password)); err != nil {
-		utils.ErrorResponse(c, statusUnauthorized, err.Error())
+		utils.ErrorResponse(c, statusUnauthorized, "email or password is incorrect")
 		return
 	}
 

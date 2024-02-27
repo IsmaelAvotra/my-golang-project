@@ -337,3 +337,28 @@ func UpdateProgram(id string, update bson.M) error {
 	}
 	return nil
 }
+
+// favorites
+func AddFavoriteUniversity(userID primitive.ObjectID, universityID primitive.ObjectID) error {
+	filter := bson.M{"_id": userID}
+	update := bson.M{"$addToSet": bson.M{"favorites": universityID}}
+
+	_, err := DB.Collection("users").UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RemoveFavoriteUniversity(userID primitive.ObjectID, universityID primitive.ObjectID) error {
+	filter := bson.M{"_id": userID}
+	update := bson.M{"$pull": bson.M{"favorites": universityID}}
+
+	_, err := DB.Collection("users").UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

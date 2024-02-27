@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -218,8 +218,6 @@ func GetProgramsFilteredHandler(c *gin.Context) {
 		filter["careerprospects"] = regexPattern
 	}
 
-	fmt.Println(filter)
-
 	programs, err := database.GetAllPrograms(filter)
 	if err != nil {
 		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
@@ -277,4 +275,55 @@ func UpdateProgramHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(StatusOK, gin.H{"message": "program updated successfully"})
+}
+
+// Add to favorites
+func AddUniversityToFavoritesHandler(c *gin.Context) {
+	userID := c.Param("userId")
+	univID := c.Param("univId")
+
+	userIDObj, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	univIDObj, err := primitive.ObjectIDFromHex(univID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid university ID"})
+		return
+	}
+
+	err = database.AddFavoriteUniversity(userIDObj, univIDObj)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add university to favorites"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "University added to favorites successfully"})
+}
+
+func RemoveUniversityToFavoritesHandler(c *gin.Context) {
+	userID := c.Param("userId")
+	univID := c.Param("univId")
+
+	userIDObj, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	univIDObj, err := primitive.ObjectIDFromHex(univID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid university ID"})
+		return
+	}
+
+	err = database.RemoveFavoriteUniversity(userIDObj, univIDObj)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove university to favorites"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "University removed to favorites successfully"})
 }

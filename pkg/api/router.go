@@ -17,9 +17,11 @@ func InitRouter() *gin.Engine {
 		v1.POST("/register", auth.RegisterHandler)
 
 		v1.GET("/users", handlers.GetUsersHandler)
-		v1.GET("/users/:id", handlers.GetUserHandler)
-		v1.DELETE("/users/:id", handlers.DeleteUserHandler)
-		v1.PATCH("/users/:id", handlers.UpdateUserHandler)
+		v1.GET("/users/:userId", handlers.GetUserHandler)
+		v1.DELETE("/users/:userId", handlers.DeleteUserHandler)
+		v1.PATCH("/users/:userId", handlers.UpdateUserHandler)
+		v1.POST("/users/:userId/favorites/:univId", handlers.AddUniversityToFavoritesHandler)
+		v1.DELETE("/users/:userId/favorites/:univId", handlers.RemoveUniversityToFavoritesHandler)
 
 		v1.GET("/universities", handlers.GetFilteredUniversitiesHandler)
 		v1.GET("/universities/:univId", handlers.GetUniversityHandler)
