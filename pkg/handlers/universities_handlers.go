@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -50,7 +50,7 @@ func CreateUniverity(c *gin.Context) {
 		Photos:          univToCreate.Photos,
 	}
 
-	insertResult, err := database.DB.Collection("universities").InsertOne(context.Background(), newUniversity)
+	insertResult, err := database.DB.Collection("universities").InsertOne(c, newUniversity)
 	if err != nil {
 		utils.ErrorResponse(c, StatusInternalServerError, "could not save the university")
 		return
@@ -77,8 +77,16 @@ func GetUniversitiesHandler(c *gin.Context) {
 
 func GetFilteredUniversitiesHandler(c *gin.Context) {
 	encodedProgramName := c.Query("programName")
+	encodedUnivName := c.Query("univName")
 
 	programName, err := url.QueryUnescape(encodedProgramName)
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+
+	univName, err := url.QueryUnescape(encodedUnivName)
+
 	if err != nil {
 		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
 		return
@@ -97,6 +105,12 @@ func GetFilteredUniversitiesHandler(c *gin.Context) {
 			utils.ErrorResponse(c, StatusNotFound, "Program not found")
 			return
 		}
+	}
+
+	if univName != "" {
+		normalizedUnivName := utils.RemoveAccents(univName)
+		fmt.Println(normalizedUnivName)
+		filter["univName"] = bson.M{"$regex": primitive.Regex{Pattern: normalizedUnivName, Options: "i"}}
 	}
 
 	universities, err := database.GetFilteredUniversities(filter)
@@ -189,7 +203,7 @@ func CreateProgramHandler(c *gin.Context) {
 		return
 	}
 
-	insertResult, err := database.DB.Collection("programs").InsertOne(context.Background(), programToCreate)
+	insertResult, err := database.DB.Collection("programs").InsertOne(c, programToCreate)
 	if err != nil {
 		utils.ErrorResponse(c, StatusInternalServerError, "could not save the program")
 		return

@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/base64"
 
@@ -43,7 +42,7 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 	filter := bson.M{"email": incomingUser.Email}
-	err := database.DB.Collection("users").FindOne(context.Background(), filter).Decode(&dbUser)
+	err := database.DB.Collection("users").FindOne(c, filter).Decode(&dbUser)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			utils.ErrorResponse(c, statusUnauthorized, err.Error())
@@ -115,7 +114,7 @@ func RegisterHandler(c *gin.Context) {
 		UpdatedAt: time.Now(),
 	}
 
-	insertResult, err := database.DB.Collection("users").InsertOne(context.Background(), newUser)
+	insertResult, err := database.DB.Collection("users").InsertOne(c, newUser)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Could not save user")
 		return
