@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -78,6 +77,9 @@ func GetUniversitiesHandler(c *gin.Context) {
 func GetFilteredUniversitiesHandler(c *gin.Context) {
 	encodedProgramName := c.Query("programName")
 	encodedUnivName := c.Query("univName")
+	encodedProvince := c.Query("province")
+	encodedRegion := c.Query("region")
+	encodedCity := c.Query("city")
 
 	programName, err := url.QueryUnescape(encodedProgramName)
 	if err != nil {
@@ -86,6 +88,27 @@ func GetFilteredUniversitiesHandler(c *gin.Context) {
 	}
 
 	univName, err := url.QueryUnescape(encodedUnivName)
+
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+
+	province, err := url.QueryUnescape(encodedProvince)
+
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+
+	region, err := url.QueryUnescape(encodedRegion)
+
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+
+	city, err := url.QueryUnescape(encodedCity)
 
 	if err != nil {
 		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
@@ -109,8 +132,21 @@ func GetFilteredUniversitiesHandler(c *gin.Context) {
 
 	if univName != "" {
 		normalizedUnivName := utils.RemoveAccents(univName)
-		fmt.Println(normalizedUnivName)
 		filter["univName"] = bson.M{"$regex": primitive.Regex{Pattern: normalizedUnivName, Options: "i"}}
+	}
+
+	if province != "" {
+		filter["location.province"] = bson.M{"$regex": primitive.Regex{Pattern: province, Options: "i"}}
+	}
+
+	if region != "" {
+		filter["location.region"] = bson.M{"$regex": primitive.Regex{Pattern: region, Options: "i"}}
+
+	}
+
+	if city != "" {
+		filter["location.city"] = bson.M{"$regex": primitive.Regex{Pattern: city, Options: "i"}}
+
 	}
 
 	universities, err := database.GetFilteredUniversities(filter)
@@ -158,15 +194,15 @@ func UpdateUniversityHandler(c *gin.Context) {
 
 	update := bson.M{
 		"$set": bson.M{
-			"univName":     university.Name,
-			"univLocation": university.Location,
-			"presentation": university.Presentation,
-			"isPrivate":    university.IsPrivate,
-			"tuition":      university.Tuition,
-			"contact":      university.Contact,
-			"imageUrl":     university.ImageURL,
-			"documentUrl":  university.DocumentURL,
-			// "programsId":        university.Programs,
+			"univName":        university.Name,
+			"univLocation":    university.Location,
+			"presentation":    university.Presentation,
+			"isPrivate":       university.IsPrivate,
+			"tuition":         university.Tuition,
+			"contact":         university.Contact,
+			"imageUrl":        university.ImageURL,
+			"documentUrl":     university.DocumentURL,
+			"programsId":      university.ProgramIDs,
 			"infrastructure":  university.Infrastructure,
 			"partnerships":    university.Partnerships,
 			"successDiplomas": university.SuccessDiplomas,

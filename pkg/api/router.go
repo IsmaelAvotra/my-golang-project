@@ -35,6 +35,9 @@ func InitRouter() *gin.Engine {
 		v1.PATCH("/universities/programs/:programId", handlers.UpdateProgramHandler)
 		v1.DELETE("/universities/programs/:programId", handlers.DeleteProgramHandler)
 
+		v1.POST("/sectors/create-sector", handlers.CreateSector)
+		v1.POST("/jobs/create-job", handlers.CreateJob)
+
 	}
 	return r
 }

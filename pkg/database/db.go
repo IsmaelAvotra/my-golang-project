@@ -362,3 +362,17 @@ func RemoveFavoriteUniversity(userID primitive.ObjectID, universityID primitive.
 
 	return nil
 }
+
+// careers
+func GetJobByName(jobName string) (*models.Job, error) {
+	normalizedJobName := strings.ToLower(strings.TrimSpace(jobName))
+	job := models.Job{}
+	err := DB.Collection("jobs").FindOne(context.TODO(), bson.M{"jobName": normalizedJobName}).Decode(&job)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &job, nil
+}
