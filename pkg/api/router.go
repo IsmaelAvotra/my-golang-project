@@ -37,6 +37,8 @@ func InitRouter() *gin.Engine {
 
 		v1.POST("/sectors/create-sector", handlers.CreateSector)
 		v1.POST("/jobs/create-job", handlers.CreateJob)
+		v1.GET("/jobs", handlers.GetJobsHandler)
+		v1.GET("/jobs/:jobId", handlers.GetJobHandler)
 
 	}
 	return r

@@ -50,6 +50,33 @@ func CreateJob(c *gin.Context) {
 	c.JSON(StatusOK, gin.H{"message": "job added successful", "jobId": insertedID.Hex()})
 }
 
+func GetJobsHandler(c *gin.Context) {
+	jobs, err := database.GetAllJobs()
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(StatusOK, jobs)
+}
+
+func GetJobHandler(c *gin.Context) {
+	jobId := c.Param("jobId")
+
+	job, err := database.GetJobById(jobId)
+
+	if err != nil {
+		utils.ErrorResponse(c, StatusBadRequest, err.Error())
+		return
+	}
+
+	if job == nil {
+		utils.ErrorResponse(c, StatusNotFound, "user not found")
+		return
+	}
+
+	c.JSON(StatusOK, job)
+}
+
 func CreateSector(c *gin.Context) {
 	sectorToCreate := models.Sector{}
 

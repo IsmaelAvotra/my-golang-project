@@ -376,3 +376,44 @@ func GetJobByName(jobName string) (*models.Job, error) {
 	}
 	return &job, nil
 }
+
+func GetAllJobs() ([]models.Job, error) {
+	jobs := []models.Job{}
+
+	cursor, err := DB.Collection("jobs").Find(context.TODO(), bson.M{})
+
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		job := models.Job{}
+		if err := cursor.Decode(&job); err != nil {
+			return nil, err
+		}
+		jobs = append(jobs, job)
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return jobs, nil
+}
+
+func GetJobById(jobId string) (*models.Job, error) {
+	objID, err := primitive.ObjectIDFromHex(jobId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	job := models.Job{}
+
+	err = DB.Collection("jobs").FindOne(context.TODO(), bson.M{"_id": objID}).Decode(&job)
+
+	if err != nil {
+		return nil, err
+	}
+	return &job, nil
+}
