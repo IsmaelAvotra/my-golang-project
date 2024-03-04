@@ -308,15 +308,34 @@ func UpdateProgramHandler(c *gin.Context) {
 		utils.ErrorResponse(c, StatusBadRequest, err.Error())
 		return
 	}
+	update := bson.M{}
 
-	update := bson.M{
-		"$set": bson.M{
-			"programName":     program.ProgramName,
-			"level":           program.Level,
-			"duration":        program.Duration,
-			"requirements":    program.Requirements,
-			"careerProspects": program.CareerProspects,
-		},
+	if program.ProgramName != "" {
+		update["$set"] = bson.M{"programname": program.ProgramName}
+	}
+	if program.Level != "" {
+		if update["$set"] == nil {
+			update["$set"] = bson.M{}
+		}
+		update["$set"].(bson.M)["level"] = program.Level
+	}
+	if program.Duration != 0 {
+		if update["$set"] == nil {
+			update["$set"] = bson.M{}
+		}
+		update["$set"].(bson.M)["duration"] = program.Duration
+	}
+	if program.Requirements != nil {
+		if update["$set"] == nil {
+			update["$set"] = bson.M{}
+		}
+		update["$set"].(bson.M)["requirements"] = program.Requirements
+	}
+	if program.CareerProspects != nil {
+		if update["$set"] == nil {
+			update["$set"] = bson.M{}
+		}
+		update["$set"].(bson.M)["careerprospects"] = program.CareerProspects
 	}
 
 	err = database.UpdateProgram(programID, update)

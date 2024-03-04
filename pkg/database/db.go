@@ -417,3 +417,19 @@ func GetJobById(jobId string) (*models.Job, error) {
 	}
 	return &job, nil
 }
+
+func UpdateJobById(jobId string, update bson.M) error {
+	objId, err := primitive.ObjectIDFromHex(jobId)
+
+	if err != nil {
+		return err
+	}
+	result, err := DB.Collection("jobs").UpdateOne(context.TODO(), bson.M{"_id": objId}, update)
+	if err != nil {
+		return err
+	}
+	if result.ModifiedCount == 0 {
+		return errors.New("no changes made")
+	}
+	return nil
+}

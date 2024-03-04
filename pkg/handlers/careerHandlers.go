@@ -5,6 +5,7 @@ import (
 	"github.com/IsmaelAvotra/pkg/models"
 	"github.com/IsmaelAvotra/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -75,6 +76,34 @@ func GetJobHandler(c *gin.Context) {
 	}
 
 	c.JSON(StatusOK, job)
+}
+
+func UpdateJobHandler(c *gin.Context) {
+	job := models.Job{}
+	JobId := c.Param("jobId")
+
+	err := c.BindJSON(&job)
+	if err != nil {
+		utils.ErrorResponse(c, StatusBadRequest, err.Error())
+		return
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"jobName":            job.Name,
+			"about":              job.About,
+			"workingEnvironment": job.WorkingEnvironment,
+			"formation":          job.Formation,
+			"sectorID":           job.SectorID,
+		},
+	}
+
+	err = database.UpdateJobById(JobId, update)
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(StatusOK, gin.H{"message": "job updated successfully"})
 }
 
 func CreateSector(c *gin.Context) {

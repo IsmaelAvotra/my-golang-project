@@ -39,6 +39,7 @@ func InitRouter() *gin.Engine {
 		v1.POST("/jobs/create-job", handlers.CreateJob)
 		v1.GET("/jobs", handlers.GetJobsHandler)
 		v1.GET("/jobs/:jobId", handlers.GetJobHandler)
+		v1.PATCH("/jobs/:jobId", handlers.UpdateJobHandler)
 
 	}
 	return r
