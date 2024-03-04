@@ -186,37 +186,69 @@ func UpdateUniversityHandler(c *gin.Context) {
 	university := models.University{}
 	univID := c.Param("univId")
 
-	err := c.BindJSON(&university)
-	if err != nil {
+	if err := c.BindJSON(&university); err != nil {
 		utils.ErrorResponse(c, StatusBadRequest, err.Error())
 		return
 	}
 
-	update := bson.M{
-		"$set": bson.M{
-			"univName":        university.Name,
-			"univLocation":    university.Location,
-			"presentation":    university.Presentation,
-			"isPrivate":       university.IsPrivate,
-			"tuition":         university.Tuition,
-			"contact":         university.Contact,
-			"imageUrl":        university.ImageURL,
-			"documentUrl":     university.DocumentURL,
-			"programsId":      university.ProgramIDs,
-			"infrastructure":  university.Infrastructure,
-			"partnerships":    university.Partnerships,
-			"successDiplomas": university.SuccessDiplomas,
-			"events":          university.Events,
-			"news":            university.News,
-			"photos":          university.Photos,
-		},
+	update := bson.M{}
+	set := bson.M{}
+
+	if university.Name != "" {
+		set["univName"] = university.Name
+	}
+	if university.Location != (models.Location{}) {
+		set["univLocation"] = university.Location
+	}
+	if university.Presentation != "" {
+		set["presentation"] = university.Presentation
+	}
+	if university.IsPrivate {
+		set["isPrivate"] = university.IsPrivate
+	}
+	if university.Tuition != 0 {
+		set["tuition"] = university.Tuition
+	}
+	if university.Contact != (models.Contact{}) {
+		set["contact"] = university.Contact
+	}
+	if university.ImageURL != "" {
+		set["imageUrl"] = university.ImageURL
+	}
+	if university.DocumentURL != "" {
+		set["documentUrl"] = university.DocumentURL
+	}
+	if len(university.ProgramIDs) > 0 {
+		set["programIDs"] = university.ProgramIDs
+	}
+	if len(university.Infrastructure) > 0 {
+		set["infrastructure"] = university.Infrastructure
+	}
+	if len(university.Partnerships) > 0 {
+		set["partnerships"] = university.Partnerships
+	}
+	if university.SuccessDiplomas != 0 {
+		set["successDiplomas"] = university.SuccessDiplomas
+	}
+	if len(university.Events) > 0 {
+		set["events"] = university.Events
+	}
+	if len(university.News) > 0 {
+		set["news"] = university.News
+	}
+	if len(university.Photos) > 0 {
+		set["photos"] = university.Photos
 	}
 
-	err = database.UpdateUniversity(univID, update)
-	if err != nil {
+	if len(set) > 0 {
+		update["$set"] = set
+	}
+
+	if err := database.UpdateUniversity(univID, update); err != nil {
 		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
 		return
 	}
+
 	c.JSON(StatusOK, gin.H{"message": "university updated successfully"})
 }
 
@@ -303,46 +335,39 @@ func UpdateProgramHandler(c *gin.Context) {
 	program := models.Program{}
 	programID := c.Param("programId")
 
-	err := c.BindJSON(&program)
-	if err != nil {
+	if err := c.BindJSON(&program); err != nil {
 		utils.ErrorResponse(c, StatusBadRequest, err.Error())
 		return
 	}
+
 	update := bson.M{}
+	set := bson.M{}
 
 	if program.ProgramName != "" {
-		update["$set"] = bson.M{"programname": program.ProgramName}
+		set["programname"] = program.ProgramName
 	}
 	if program.Level != "" {
-		if update["$set"] == nil {
-			update["$set"] = bson.M{}
-		}
-		update["$set"].(bson.M)["level"] = program.Level
+		set["level"] = program.Level
 	}
 	if program.Duration != 0 {
-		if update["$set"] == nil {
-			update["$set"] = bson.M{}
-		}
-		update["$set"].(bson.M)["duration"] = program.Duration
+		set["duration"] = program.Duration
 	}
 	if program.Requirements != nil {
-		if update["$set"] == nil {
-			update["$set"] = bson.M{}
-		}
-		update["$set"].(bson.M)["requirements"] = program.Requirements
+		set["requirements"] = program.Requirements
 	}
 	if program.CareerProspects != nil {
-		if update["$set"] == nil {
-			update["$set"] = bson.M{}
-		}
-		update["$set"].(bson.M)["careerprospects"] = program.CareerProspects
+		set["careerprospects"] = program.CareerProspects
 	}
 
-	err = database.UpdateProgram(programID, update)
-	if err != nil {
+	if len(set) > 0 {
+		update["$set"] = set
+	}
+
+	if err := database.UpdateProgram(programID, update); err != nil {
 		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
 		return
 	}
+
 	c.JSON(StatusOK, gin.H{"message": "program updated successfully"})
 }
 
