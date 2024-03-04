@@ -433,3 +433,20 @@ func UpdateJobById(jobId string, update bson.M) error {
 	}
 	return nil
 }
+
+func DeleteJob(jobId string) error {
+	objId, err := primitive.ObjectIDFromHex(jobId)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := DB.Collection("jobs").DeleteOne(context.TODO(), bson.M{"_id": objId})
+	if err != nil {
+		return err
+	}
+	if result.DeletedCount == 0 {
+		return errors.New("program not found")
+	}
+	return nil
+}

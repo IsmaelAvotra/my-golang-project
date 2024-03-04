@@ -88,14 +88,44 @@ func UpdateJobHandler(c *gin.Context) {
 		return
 	}
 
-	update := bson.M{
-		"$set": bson.M{
-			"jobName":            job.Name,
-			"about":              job.About,
-			"workingEnvironment": job.WorkingEnvironment,
-			"formation":          job.Formation,
-			"sectorID":           job.SectorID,
-		},
+	update := bson.M{}
+	set := bson.M{}
+	var emptyObjectID primitive.ObjectID
+
+	if job.Name != "" {
+		set["name"] = job.Name
+	}
+	if job.About.Description != "" {
+		set["about.description"] = job.About.Description
+	}
+	if len(job.About.Missions) > 0 {
+		set["about.missions"] = job.About.Missions
+	}
+	if len(job.About.Skills.Knowledges) > 0 {
+		set["about.skills.knowledges"] = job.About.Skills.Knowledges
+	}
+	if len(job.About.Skills.KnowHow) > 0 {
+		set["about.skills.knowhow"] = job.About.Skills.KnowHow
+	}
+	if job.About.ProfessionalEvolution != "" {
+		set["about.professionalevolution"] = job.About.ProfessionalEvolution
+	}
+	if job.WorkingEnvironment.Presentation != "" {
+		set["workingEnvironment.presentation"] = job.WorkingEnvironment.Presentation
+	}
+	if job.WorkingEnvironment.ExercicePlace != "" {
+		set["workingEnvironment.exerciceplace"] = job.WorkingEnvironment.ExercicePlace
+	}
+	if job.Formation != "" {
+		set["formation"] = job.Formation
+	}
+
+	if job.SectorID != emptyObjectID {
+		set["sectorID"] = job.SectorID
+	}
+
+	if len(set) > 0 {
+		update["$set"] = set
 	}
 
 	err = database.UpdateJobById(JobId, update)
@@ -104,6 +134,18 @@ func UpdateJobHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(StatusOK, gin.H{"message": "job updated successfully"})
+}
+
+func DeleteJobHandler(c *gin.Context) {
+	jobId := c.Param("jobId")
+
+	err := database.DeleteJob(jobId)
+	if err != nil {
+		utils.ErrorResponse(c, StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(StatusOK, gin.H{"message": "job deleted successfully"})
 }
 
 func CreateSector(c *gin.Context) {

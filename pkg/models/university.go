@@ -46,6 +46,13 @@ type University struct {
 	Events          []Event              `json:"events"`
 	News            []string             `json:"news"`
 	Photos          []string             `json:"Photos"`
+	Ratings         []Rating             `json:"ratings"`
+}
+
+type Rating struct {
+	UserID  primitive.ObjectID `json:"userID,omitempty" bson:"userID,omitempty"`
+	Rating  int                `json:"rating"`
+	Comment string             `json:"comment"`
 }
 
 type Program struct {
