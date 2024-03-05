@@ -47,6 +47,7 @@ func CreateUniverity(c *gin.Context) {
 		Events:          univToCreate.Events,
 		News:            univToCreate.News,
 		Photos:          univToCreate.Photos,
+		Ratings:         univToCreate.Ratings,
 	}
 
 	insertResult, err := database.DB.Collection("universities").InsertOne(c, newUniversity)
@@ -238,6 +239,9 @@ func UpdateUniversityHandler(c *gin.Context) {
 	}
 	if len(university.Photos) > 0 {
 		set["photos"] = university.Photos
+	}
+	if len(university.Ratings) > 0 {
+		set["ratings"] = university.Ratings
 	}
 
 	if len(set) > 0 {
