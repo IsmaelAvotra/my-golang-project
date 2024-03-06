@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -198,8 +199,22 @@ func UpdateUniversityHandler(c *gin.Context) {
 	if university.Name != "" {
 		set["univName"] = university.Name
 	}
-	if university.Location != (models.Location{}) {
-		set["univLocation"] = university.Location
+
+	// Location
+	if university.Location.City != "" {
+		set["location.city"] = university.Location.City
+	}
+	if university.Location.Adress != "" {
+		set["location.adress"] = university.Location.Adress
+	}
+	if university.Location.CoordinateGPS != "" {
+		set["location.coordinateGPS"] = university.Location.CoordinateGPS
+	}
+	if university.Location.Province != "" {
+		set["location.province"] = university.Location.Province
+	}
+	if university.Location.Region != "" {
+		set["location.region"] = university.Location.Region
 	}
 	if university.Presentation != "" {
 		set["presentation"] = university.Presentation
@@ -210,9 +225,18 @@ func UpdateUniversityHandler(c *gin.Context) {
 	if university.Tuition != 0 {
 		set["tuition"] = university.Tuition
 	}
-	if university.Contact != (models.Contact{}) {
-		set["contact"] = university.Contact
+
+	// Contact
+	if university.Contact.PhoneNumber != "" {
+		set["contact.phoneNumber"] = university.Contact.PhoneNumber
 	}
+	if university.Contact.Email != "" {
+		set["contact.email"] = university.Contact.Email
+	}
+	if university.Contact.Website != "" {
+		set["contact.website"] = university.Contact.Website
+	}
+
 	if university.ImageURL != "" {
 		set["imageUrl"] = university.ImageURL
 	}
@@ -231,9 +255,41 @@ func UpdateUniversityHandler(c *gin.Context) {
 	if university.SuccessDiplomas != 0 {
 		set["successDiplomas"] = university.SuccessDiplomas
 	}
-	if len(university.Events) > 0 {
-		set["events"] = university.Events
+
+	//Events
+	for i, event := range university.Events {
+		if event.Title != "" {
+			key := fmt.Sprintf("events.%d.title", i)
+			set[key] = event.Title
+		}
+
+		if event.Descrioption != "" {
+			key := fmt.Sprintf("events.%d.descrioption", i)
+			set[key] = event.Descrioption
+		}
+
+		if !event.Date.IsZero() {
+			key := fmt.Sprintf("events.%d.date", i)
+			set[key] = event.Date
+		}
+
+		if event.Location != "" {
+			key := fmt.Sprintf("events.%d.location", i)
+			set[key] = event.Location
+		}
+
+		if event.IsFree {
+			key := fmt.Sprintf("events.%d.isfree", i)
+			set[key] = event.IsFree
+		}
+
+		if event.AdmissionPrice != 0 {
+			key := fmt.Sprintf("events.%d.admissionprice", i)
+			set[key] = event.AdmissionPrice
+		}
+
 	}
+
 	if len(university.News) > 0 {
 		set["news"] = university.News
 	}
