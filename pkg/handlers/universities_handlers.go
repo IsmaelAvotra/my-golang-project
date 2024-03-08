@@ -287,7 +287,6 @@ func UpdateUniversityHandler(c *gin.Context) {
 			key := fmt.Sprintf("events.%d.admissionprice", i)
 			set[key] = event.AdmissionPrice
 		}
-
 	}
 
 	if len(university.News) > 0 {

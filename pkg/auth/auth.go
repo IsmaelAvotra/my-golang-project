@@ -3,6 +3,8 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
+	"strings"
 
 	"net/http"
 	"os"
@@ -68,6 +70,84 @@ func LoginHandler(c *gin.Context) {
 
 }
 
+func GenerateToken(email string) (string, error) {
+	expirationTime := time.Now().Add(5 * time.Minute).Unix()
+
+	claims := &jwt.StandardClaims{
+		ExpiresAt: expirationTime,
+		Issuer:    email,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString(JwtKey)
+
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+func ExtractTokenFromRequest(c *gin.Context) (string, error) {
+	authHeader := c.Request.Header.Get("Authorization")
+
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		return "", errors.New("invalid authorization header")
+	}
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+
+	return token, nil
+}
+
+func IsAdmin(c *gin.Context) (bool, error) {
+	token, err := ExtractTokenFromRequest(c)
+	if err != nil {
+		return false, err
+	}
+	claims, err := ValidateJWTToken(token)
+
+	role := claims["role"]
+	if role != "admin" {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func ValidateJWTToken(token string) (jwt.MapClaims, error) {
+	claims := jwt.MapClaims{}
+	parsedToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return JwtKey, nil
+	})
+
+	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			switch ve.Errors {
+			case jwt.ValidationErrorMalformed:
+				return nil, errors.New("malformed token")
+			case jwt.ValidationErrorUnverifiable:
+				return nil, errors.New("token could not be verified")
+			case jwt.ValidationErrorSignatureInvalid:
+				return nil, errors.New("invalid token signature")
+			case jwt.ValidationErrorExpired:
+				return nil, errors.New("expired token")
+			default:
+				return nil, errors.New("invalid token")
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	if !parsedToken.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
+}
+
 func RegisterHandler(c *gin.Context) {
 	var userToCreate models.User
 
@@ -127,24 +207,6 @@ func RegisterHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Registration successful", "id": insertedID.Hex()})
-}
-
-func GenerateToken(email string) (string, error) {
-	expirationTime := time.Now().Add(5 * time.Minute).Unix()
-
-	claims := &jwt.StandardClaims{
-		ExpiresAt: expirationTime,
-		Issuer:    email,
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	tokenString, err := token.SignedString(JwtKey)
-
-	if err != nil {
-		return "", err
-	}
-	return tokenString, nil
 }
 
 func GenerateRandomKey() string {
