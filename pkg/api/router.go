@@ -15,6 +15,7 @@ func InitRouter() *gin.Engine {
 	{
 		v1.POST("/login", auth.LoginHandler)
 		v1.POST("/register", auth.RegisterHandler)
+		v1.GET("/test-admin", auth.MyProtectedAdminEndpoint)
 
 		v1.GET("/users", handlers.GetUsersHandler)
 		v1.GET("/users/:userId", handlers.GetUserHandler)

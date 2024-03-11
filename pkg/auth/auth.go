@@ -22,14 +22,16 @@ import (
 )
 
 const (
-	statusBadRequest          = http.StatusBadRequest
 	statusInternalServerError = http.StatusInternalServerError
+	statusBadRequest          = http.StatusBadRequest
 	statusOK                  = http.StatusOK
 	statusUnauthorized        = http.StatusUnauthorized
+	statusForbidden           = http.StatusForbidden
 )
 
 type Claims struct {
 	Email string `json:"email"`
+	Role  string `json:"role"`
 	jwt.StandardClaims
 }
 
@@ -59,7 +61,7 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := GenerateToken(dbUser.Email)
+	token, err := GenerateToken(dbUser.Email, dbUser.Role)
 
 	if err != nil {
 		utils.ErrorResponse(c, statusInternalServerError, err.Error())
@@ -70,12 +72,15 @@ func LoginHandler(c *gin.Context) {
 
 }
 
-func GenerateToken(email string) (string, error) {
+func GenerateToken(email string, role string) (string, error) {
 	expirationTime := time.Now().Add(5 * time.Minute).Unix()
 
-	claims := &jwt.StandardClaims{
-		ExpiresAt: expirationTime,
-		Issuer:    email,
+	claims := &Claims{
+		Email: email,
+		Role:  role,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime,
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -91,7 +96,7 @@ func GenerateToken(email string) (string, error) {
 func ExtractTokenFromRequest(c *gin.Context) (string, error) {
 	authHeader := c.Request.Header.Get("Authorization")
 
-	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer") {
 		return "", errors.New("invalid authorization header")
 	}
 	token := strings.TrimPrefix(authHeader, "Bearer ")
@@ -114,6 +119,19 @@ func IsAdmin(c *gin.Context) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func MyProtectedAdminEndpoint(c *gin.Context) {
+	isAdmin, err := IsAdmin(c)
+	if err != nil {
+		utils.ErrorResponse(c, statusUnauthorized, err.Error())
+		return
+	}
+	if !isAdmin {
+		utils.ErrorResponse(c, statusForbidden, "You are not authorized to access this resource")
+		return
+	}
+	c.JSON(statusOK, gin.H{"message": "Your are authorized to access this resource"})
 }
 
 func ValidateJWTToken(token string) (jwt.MapClaims, error) {
