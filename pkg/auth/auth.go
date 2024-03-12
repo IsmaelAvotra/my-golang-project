@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"strings"
 
@@ -61,36 +59,52 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := GenerateToken(dbUser.Email, dbUser.Role)
+	accessToken, refreshToken, err := GenerateTokens(dbUser.Email, dbUser.Role)
 
 	if err != nil {
 		utils.ErrorResponse(c, statusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(statusOK, gin.H{"token": token})
-
+	c.JSON(statusOK, gin.H{
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken,
+	})
 }
 
-func GenerateToken(email string, role string) (string, error) {
-	expirationTime := time.Now().Add(5 * time.Minute).Unix()
+func GenerateTokens(email string, role string) (string, string, error) {
+	accessTokenExp := time.Now().Add(5 * time.Minute).Unix()
+	refreshTokenExp := time.Now().Add(24 * time.Hour).Unix()
 
-	claims := &Claims{
+	accessTokenClaims := &Claims{
 		Email: email,
 		Role:  role,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime,
+			ExpiresAt: accessTokenExp,
+			Issuer:    email,
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	tokenString, err := token.SignedString(JwtKey)
-
-	if err != nil {
-		return "", err
+	refreshTokenClaims := &Claims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: refreshTokenExp,
+			Issuer:    email,
+		},
 	}
-	return tokenString, nil
+
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
+	accessTokenString, err := accessToken.SignedString(JwtKey)
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
+	refreshTokenString, err := refreshToken.SignedString(JwtKey)
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessTokenString, refreshTokenString, nil
 }
 
 func ExtractTokenFromRequest(c *gin.Context) (string, error) {
@@ -225,14 +239,4 @@ func RegisterHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Registration successful", "id": insertedID.Hex()})
-}
-
-func GenerateRandomKey() string {
-	key := make([]byte, 32)
-	_, err := rand.Read(key)
-	if err != nil {
-		panic("Failed to generate random key: " + err.Error())
-	}
-
-	return base64.StdEncoding.EncodeToString(key)
 }
