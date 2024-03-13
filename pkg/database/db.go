@@ -3,13 +3,11 @@ package database
 import (
 	"context"
 	"errors"
-	"log"
 	"os"
 	"strings"
 
 	"github.com/IsmaelAvotra/pkg/models"
 	"github.com/IsmaelAvotra/pkg/utils"
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,11 +19,6 @@ var DB *mongo.Database
 
 // Connect database
 func ConnectDatabase() {
-	if _, exists := os.LookupEnv("RAILWAY_ENVIRONMENT"); !exists {
-		if err := godotenv.Load(); err != nil {
-			log.Fatal("error loading .env file:", err)
-		}
-	}
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
 		panic(err)
