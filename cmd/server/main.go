@@ -18,16 +18,12 @@ func main() {
 		}
 	}
 
-	err := godotenv.Load()
 	port := os.Getenv("PORT")
 
 	if port == "" {
 		port = "8000"
 	}
 
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 	database.ConnectDatabase()
 
 	gin.SetMode(gin.DebugMode)
