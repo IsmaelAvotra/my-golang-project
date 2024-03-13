@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -18,17 +19,24 @@ import (
 var DB *mongo.Database
 
 // Connect database
-func ConnectDatabase() {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
-	if err != nil {
-		panic(err)
+func ConnectDatabase() error {
+	mongoURI := os.Getenv("MONGO_URI")
+	if mongoURI == "" {
+		return errors.New("MONGO_URI environment variable not set")
 	}
 
-	if err := client.Ping(context.TODO(), readpref.Primary()); err != nil {
-		panic(err)
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURI))
+	if err != nil {
+		return fmt.Errorf("failed to connect to MongoDB: %w", err)
+	}
+
+	err = client.Ping(context.TODO(), readpref.Primary())
+	if err != nil {
+		return fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
 
 	DB = client.Database("my-project")
+	return nil
 }
 
 // For users
