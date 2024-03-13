@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/IsmaelAvotra/pkg/models"
@@ -18,7 +19,7 @@ var DB *mongo.Database
 
 // Connect database
 func ConnectDatabase() {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
 		panic(err)
 	}
