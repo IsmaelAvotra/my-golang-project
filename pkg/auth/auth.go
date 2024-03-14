@@ -192,9 +192,9 @@ func RegisterHandler(c *gin.Context) {
 
 	if err != nil {
 		if err == errors.New("DB nil") {
-			utils.ErrorResponse(c, statusInternalServerError, "Database connection error nil le izy")
+			utils.ErrorResponse(c, statusInternalServerError, "Database connection error nil")
 		} else {
-			utils.ErrorResponse(c, statusInternalServerError, "Error checking email uniqueness")
+			utils.ErrorResponse(c, statusInternalServerError, err.Error())
 		}
 		return
 	}
