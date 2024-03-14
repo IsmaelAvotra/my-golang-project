@@ -42,6 +42,7 @@ func ConnectDatabase() error {
 // For users
 func GetUserByEmail(email string) (*models.User, error) {
 	user := models.User{}
+	fmt.Printf("DB value: %v\n", DB)
 	err := DB.Collection("users").FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
