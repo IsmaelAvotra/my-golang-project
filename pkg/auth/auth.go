@@ -188,31 +188,31 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	// existingUserByEmail, err := database.GetUserByEmail(userToCreate.Email)
+	existingUserByEmail, err := database.GetUserByEmail(userToCreate.Email)
 
-	// if err != nil {
-	// 	if err == errors.New("tena nil le DB") {
-	// 		utils.ErrorResponse(c, statusInternalServerError, "Database connection error nil le izy")
-	// 	} else {
-	// 		utils.ErrorResponse(c, statusInternalServerError, "Error checking email uniqueness")
-	// 	}
-	// 	return
-	// }
+	if err != nil {
+		if err == errors.New("DB nil") {
+			utils.ErrorResponse(c, statusInternalServerError, "Database connection error nil le izy")
+		} else {
+			utils.ErrorResponse(c, statusInternalServerError, "Error checking email uniqueness")
+		}
+		return
+	}
 
-	// if existingUserByEmail != nil {
-	// 	utils.ErrorResponse(c, http.StatusBadRequest, "Email already exists")
-	// 	return
-	// }
+	if existingUserByEmail != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Email already exists")
+		return
+	}
 
-	// existingUserByUsername, err := database.GetUserByUsername(userToCreate.Username)
-	// if err != nil {
-	// 	utils.ErrorResponse(c, statusInternalServerError, "Error checking username uniqueness")
-	// }
+	existingUserByUsername, err := database.GetUserByUsername(userToCreate.Username)
+	if err != nil {
+		utils.ErrorResponse(c, statusInternalServerError, "Error checking username uniqueness")
+	}
 
-	// if existingUserByUsername != nil {
-	// 	utils.ErrorResponse(c, http.StatusBadRequest, "Username already exists")
-	// 	return
-	// }
+	if existingUserByUsername != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Username already exists")
+		return
+	}
 
 	hashedPassword, err := utils.HashPassword(userToCreate.Password)
 	if err != nil {

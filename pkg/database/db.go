@@ -43,7 +43,7 @@ func ConnectDatabase() error {
 func GetUserByEmail(email string) (*models.User, error) {
 	user := models.User{}
 	if DB == nil {
-		return nil, errors.New("tena nil le DB")
+		return nil, errors.New("DB nil")
 	}
 	err := DB.Collection("users").FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
 	if err != nil {
