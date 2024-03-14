@@ -191,7 +191,12 @@ func RegisterHandler(c *gin.Context) {
 	existingUserByEmail, err := database.GetUserByEmail(userToCreate.Email)
 
 	if err != nil {
-		utils.ErrorResponse(c, statusInternalServerError, "Error checking email uniqueness")
+		if err == errors.New("tena nil le DB") {
+			utils.ErrorResponse(c, statusInternalServerError, "Database connection error nil le izy")
+		} else {
+			utils.ErrorResponse(c, statusInternalServerError, "Error checking email uniqueness")
+		}
+		return
 	}
 
 	if existingUserByEmail != nil {
