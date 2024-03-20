@@ -26,7 +26,7 @@ func main() {
 
 	database.ConnectDatabase()
 
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(gin.ReleaseMode)
 
 	r := api.InitRouter()
 
