@@ -32,14 +32,8 @@ func ValidateJWT() gin.HandlerFunc {
 		if err != nil {
 			if ve, ok := err.(*jwt.ValidationError); ok {
 				switch ve.Errors {
-				case jwt.ValidationErrorMalformed:
-					utils.ErrorResponse(c, StatusUnauthorized, "malformed token")
-				case jwt.ValidationErrorUnverifiable:
-					utils.ErrorResponse(c, StatusUnauthorized, "token could not be verified")
-				case jwt.ValidationErrorSignatureInvalid:
-					utils.ErrorResponse(c, StatusUnauthorized, "invalid token signature")
-
 				case jwt.ValidationErrorExpired:
+
 					refreshToken := c.Request.Header.Get("refresh_token")
 					if refreshToken == "" {
 						utils.ErrorResponse(c, StatusUnauthorized, "expired token, refresh token is required")
@@ -54,22 +48,22 @@ func ValidateJWT() gin.HandlerFunc {
 						return
 					}
 
-					newAccessToken, _, err := GenerateTokens(refreshClaims.Email, refreshClaims.Role)
+					newAccessToken, newRefreshToken, err := GenerateTokens(refreshClaims.Email, refreshClaims.Role)
 					if err != nil {
-						utils.ErrorResponse(c, StatusUnauthorized, "failed to generate new access token")
+						utils.ErrorResponse(c, StatusUnauthorized, "failed to generate new tokens")
 						c.Abort()
 						return
 					}
 
-					c.Request.Header.Set("Authorization", "Bearer "+newAccessToken)
-					accessToken = newAccessToken
-
-				default:
-					utils.ErrorResponse(c, StatusUnauthorized, "invalid token")
+					c.JSON(StatusOK, gin.H{
+						"access_token":  newAccessToken,
+						"refresh_token": newRefreshToken,
+					})
+					c.Abort()
+					return
 				}
-			} else {
-				utils.ErrorResponse(c, StatusUnauthorized, err.Error())
 			}
+			utils.ErrorResponse(c, StatusUnauthorized, "invalid token")
 			c.Abort()
 			return
 		}

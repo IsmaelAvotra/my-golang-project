@@ -105,6 +105,31 @@ func GenerateTokens(email, role string) (string, string, error) {
 	return accessTokenString, refreshTokenString, nil
 }
 
+func RefreshTokenHandler(c *gin.Context) {
+	refreshToken := c.Request.Header.Get("refresh_token")
+	if refreshToken == "" {
+		utils.ErrorResponse(c, statusUnauthorized, "refresh token is required")
+		return
+	}
+
+	refreshClaims, err := ValidateRefreshToken(refreshToken)
+	if err != nil {
+		utils.ErrorResponse(c, statusUnauthorized, "invalid refresh token")
+		return
+	}
+
+	newAccessToken, newRefreshToken, err := GenerateTokens(refreshClaims.Email, refreshClaims.Role)
+	if err != nil {
+		utils.ErrorResponse(c, statusUnauthorized, "failed to generate new tokens")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"access_token":  newAccessToken,
+		"refresh_token": newRefreshToken,
+	})
+}
+
 func ValidateRefreshToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return JwtKey, nil
