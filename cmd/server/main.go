@@ -12,10 +12,8 @@ import (
 
 func main() {
 
-	if _, exists := os.LookupEnv("RAILWAY_ENVIRONMENT"); !exists {
-		if err := godotenv.Load(); err != nil {
-			log.Fatal("error loading .env file:", err)
-		}
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("error loading .env file:", err)
 	}
 
 	port := os.Getenv("PORT")
@@ -26,7 +24,7 @@ func main() {
 
 	database.ConnectDatabase()
 
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.DebugMode)
 
 	r := api.InitRouter()
 

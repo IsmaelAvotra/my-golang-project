@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/IsmaelAvotra/pkg/auth"
 	"github.com/IsmaelAvotra/pkg/handlers"
+	"github.com/IsmaelAvotra/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +16,7 @@ func InitRouter() *gin.Engine {
 	{
 		v1.POST("/login", auth.LoginHandler)
 		v1.POST("/register", auth.RegisterHandler)
-		v1.GET("/test-admin", auth.MyProtectedAdminEndpoint)
+		v1.GET("/test-admin", middleware.ValidateJWT(), middleware.AdminAuth(), auth.MyProtectedAdminEndpoint)
 
 		v1.GET("/users", handlers.GetUsersHandler)
 		v1.GET("/users/:userId", handlers.GetUserHandler)

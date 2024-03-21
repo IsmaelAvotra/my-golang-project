@@ -2,10 +2,9 @@ package auth
 
 import (
 	"errors"
-	"strings"
+	"os"
 
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/IsmaelAvotra/pkg/database"
@@ -18,6 +17,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var JwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 const (
 	statusInternalServerError = http.StatusInternalServerError
@@ -32,8 +33,6 @@ type Claims struct {
 	Role  string `json:"role"`
 	jwt.StandardClaims
 }
-
-var JwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 func LoginHandler(c *gin.Context) {
 	incomingUser := models.LoginUser{}
@@ -72,23 +71,14 @@ func LoginHandler(c *gin.Context) {
 	})
 }
 
-func GenerateTokens(email string, role string) (string, string, error) {
-	accessTokenExp := time.Now().Add(5 * time.Minute).Unix()
-	refreshTokenExp := time.Now().Add(24 * time.Hour).Unix()
-
+func GenerateTokens(email, role string) (string, string, error) {
 	accessTokenClaims := &Claims{
 		Email: email,
 		Role:  role,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: accessTokenExp,
-			Issuer:    email,
-		},
-	}
-
-	refreshTokenClaims := &Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: refreshTokenExp,
-			Issuer:    email,
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			Subject:   "access_token",
 		},
 	}
 
@@ -96,6 +86,14 @@ func GenerateTokens(email string, role string) (string, string, error) {
 	accessTokenString, err := accessToken.SignedString(JwtKey)
 	if err != nil {
 		return "", "", err
+	}
+
+	refreshTokenClaims := &Claims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			Subject:   "refresh_token",
+		},
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
@@ -107,77 +105,24 @@ func GenerateTokens(email string, role string) (string, string, error) {
 	return accessTokenString, refreshTokenString, nil
 }
 
-func ExtractTokenFromRequest(c *gin.Context) (string, error) {
-	authHeader := c.Request.Header.Get("Authorization")
-
-	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer") {
-		return "", errors.New("invalid authorization header")
-	}
-	token := strings.TrimPrefix(authHeader, "Bearer ")
-
-	return token, nil
-}
-
-func IsAdmin(c *gin.Context) (bool, error) {
-	token, err := ExtractTokenFromRequest(c)
-	if err != nil {
-		return false, err
-	}
-	claims, err := ValidateJWTToken(token)
-
-	role := claims["role"]
-	if role != "admin" {
-		return false, nil
-	}
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func MyProtectedAdminEndpoint(c *gin.Context) {
-	isAdmin, err := IsAdmin(c)
-	if err != nil {
-		utils.ErrorResponse(c, statusUnauthorized, err.Error())
-		return
-	}
-	if !isAdmin {
-		utils.ErrorResponse(c, statusForbidden, "You are not authorized to access this resource")
-		return
-	}
-	c.JSON(statusOK, gin.H{"message": "Your are authorized to access this resource"})
-}
-
-func ValidateJWTToken(token string) (jwt.MapClaims, error) {
-	claims := jwt.MapClaims{}
-	parsedToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+func ValidateRefreshToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return JwtKey, nil
 	})
-
 	if err != nil {
-		if ve, ok := err.(*jwt.ValidationError); ok {
-			switch ve.Errors {
-			case jwt.ValidationErrorMalformed:
-				return nil, errors.New("malformed token")
-			case jwt.ValidationErrorUnverifiable:
-				return nil, errors.New("token could not be verified")
-			case jwt.ValidationErrorSignatureInvalid:
-				return nil, errors.New("invalid token signature")
-			case jwt.ValidationErrorExpired:
-				return nil, errors.New("expired token")
-			default:
-				return nil, errors.New("invalid token")
-			}
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
-	if !parsedToken.Valid {
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
 		return nil, errors.New("invalid token")
 	}
 
 	return claims, nil
+}
+
+func MyProtectedAdminEndpoint(c *gin.Context) {
+	c.JSON(statusOK, gin.H{"message": "Your are authorized to access this resource"})
 }
 
 func RegisterHandler(c *gin.Context) {
