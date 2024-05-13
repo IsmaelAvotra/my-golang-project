@@ -14,6 +14,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func isValidUniversityType(ut string) bool {
+	switch ut {
+	case "public", "private", "semi-private":
+		return true
+	}
+	return false
+}
+
 func CreateUniverity(c *gin.Context) {
 	var univToCreate models.University
 
@@ -21,6 +29,12 @@ func CreateUniverity(c *gin.Context) {
 		utils.ErrorResponse(c, StatusBadRequest, err.Error())
 		return
 	}
+
+	if !isValidUniversityType(univToCreate.UniversityType) {
+		utils.ErrorResponse(c, StatusBadRequest, "invalid university type")
+		return
+	}
+
 	existingUniverity, err := database.GetUnivByName(univToCreate.Name)
 
 	if err != nil {
@@ -36,7 +50,7 @@ func CreateUniverity(c *gin.Context) {
 		Name:            univToCreate.Name,
 		Location:        univToCreate.Location,
 		Presentation:    univToCreate.Presentation,
-		IsPrivate:       univToCreate.IsPrivate,
+		UniversityType:  univToCreate.UniversityType,
 		Tuition:         univToCreate.Tuition,
 		Contact:         univToCreate.Contact,
 		ImageURL:        univToCreate.ImageURL,
@@ -193,6 +207,11 @@ func UpdateUniversityHandler(c *gin.Context) {
 		return
 	}
 
+	if !isValidUniversityType(university.UniversityType) {
+		utils.ErrorResponse(c, StatusBadRequest, "invalid university type")
+		return
+	}
+
 	update := bson.M{}
 	set := bson.M{}
 
@@ -219,11 +238,11 @@ func UpdateUniversityHandler(c *gin.Context) {
 	if university.Presentation != "" {
 		set["presentation"] = university.Presentation
 	}
-	if university.IsPrivate {
-		set["isPrivate"] = university.IsPrivate
-	}
 	if university.Tuition != 0 {
 		set["tuition"] = university.Tuition
+	}
+	if university.UniversityType != "" {
+		set["universityType"] = university.UniversityType
 	}
 
 	// Contact

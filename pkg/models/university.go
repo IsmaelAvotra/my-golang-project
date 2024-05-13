@@ -34,7 +34,7 @@ type University struct {
 	Name            string               `json:"univName" bson:"univName,omitempty" binding:"required" unique:"true" validate:"required"`
 	Location        Location             `json:"univLocation" binding:"required" validate:"required"`
 	Presentation    string               `json:"presentation"`
-	IsPrivate       bool                 `json:"isPrivate" validate:"required"`
+	UniversityType  string               `json:"universityType" validate:"required"`
 	Tuition         float64              `json:"tuition"`
 	Contact         Contact              `json:"contact"`
 	ImageURL        string               `json:"imageUrl"`
