@@ -38,6 +38,16 @@ func LoginHandler(c *gin.Context) {
 	incomingUser := models.LoginUser{}
 	dbUser := models.User{}
 
+	if len(incomingUser.Email) == 0 || len(incomingUser.Password) == 0 {
+		utils.ErrorResponse(c, statusBadRequest, "Email and password are required")
+		return
+	}
+
+	if len(incomingUser.Email) > 255 || len(incomingUser.Password) > 255 {
+		utils.ErrorResponse(c, statusBadRequest, "Email and password length should be less than 255 characters")
+		return
+	}
+
 	if err := c.ShouldBindJSON(&incomingUser); err != nil {
 		utils.ErrorResponse(c, statusBadRequest, err.Error())
 		return
